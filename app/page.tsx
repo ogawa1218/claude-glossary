@@ -2,48 +2,86 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { glossaryTerms, categories, type Term } from "@/lib/glossary";
+import { glossary, CATEGORIES, type Term, type Category } from "@/lib/glossary";
+
+const CATEGORY_COLORS: Record<Category, string> = {
+  "Claude製品": "#8b5cf6",
+  "基本概念": "#3b82f6",
+  "テクニック": "#10b981",
+  "開発者向け": "#F97316",
+};
 
 function TermCard({ term }: { term: Term }) {
   const [open, setOpen] = useState(false);
+  const color = CATEGORY_COLORS[term.category];
+
   return (
     <div
-      className="rounded-xl border p-5 cursor-pointer transition-all hover:border-orange-500/50 group"
-      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      className="rounded-2xl border cursor-pointer transition-all duration-200 hover:scale-[1.01] group"
+      style={{
+        background: "var(--card)",
+        borderColor: open ? color : "var(--border)",
+      }}
       onClick={() => setOpen((o) => !o)}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <span
-            className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full mb-2"
-            style={{ background: "#F97316/15", color: "var(--accent)", border: "1px solid #F9731640" }}
-          >
-            {term.category}
-          </span>
-          <h3 className="font-semibold text-base leading-snug group-hover:text-orange-400 transition-colors">
-            {term.term}
-          </h3>
-        </div>
-        <span
-          className="mt-1 text-lg select-none transition-transform duration-200"
-          style={{ color: "var(--muted)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-        >
-          ▾
-        </span>
-      </div>
-      {open && (
-        <div className="mt-4 border-t pt-4" style={{ borderColor: "var(--border)" }}>
-          <p className="text-sm leading-relaxed" style={{ color: "#d1d5db" }}>
-            {term.definition}
-          </p>
-          {term.example && (
-            <div
-              className="mt-3 text-sm rounded-lg p-3 italic"
-              style={{ background: "#ffffff08", color: "var(--muted)", borderLeft: "3px solid var(--accent)" }}
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <span
+              className="inline-block text-xs font-semibold px-2.5 py-1 rounded-full mb-3"
+              style={{
+                background: `${color}20`,
+                color: color,
+                border: `1px solid ${color}40`,
+              }}
             >
+              {term.category}
+            </span>
+            <h3 className="font-bold text-base leading-snug mb-0.5 group-hover:text-orange-400 transition-colors">
+              {term.name}
+            </h3>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              {term.englishName}
+            </p>
+          </div>
+          <span
+            className="mt-1 text-lg select-none transition-transform duration-300 flex-shrink-0"
+            style={{
+              color: "var(--muted)",
+              transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            }}
+          >
+            ▾
+          </span>
+        </div>
+
+        {!open && (
+          <p className="mt-3 text-sm leading-relaxed line-clamp-2" style={{ color: "var(--muted)" }}>
+            {term.description}
+          </p>
+        )}
+      </div>
+
+      {open && (
+        <div className="px-5 pb-5 fade-in">
+          <div className="border-t pt-4" style={{ borderColor: "var(--border)" }}>
+            <p className="text-sm leading-relaxed mb-3" style={{ color: "#d1d5db" }}>
+              {term.description}
+            </p>
+            <div
+              className="text-sm rounded-xl p-4 italic"
+              style={{
+                background: "#ffffff06",
+                color: "var(--muted)",
+                borderLeft: `3px solid ${color}`,
+              }}
+            >
+              <span className="text-xs font-semibold not-italic block mb-1" style={{ color: color }}>
+                使用例
+              </span>
               {term.example}
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>
@@ -52,17 +90,18 @@ function TermCard({ term }: { term: Term }) {
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState<Category | "すべて">("すべて");
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return glossaryTerms.filter((t) => {
+    return glossary.filter((t) => {
       const matchesSearch =
         !q ||
-        t.term.toLowerCase().includes(q) ||
-        t.definition.toLowerCase().includes(q) ||
+        t.name.toLowerCase().includes(q) ||
+        t.englishName.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q) ||
         t.category.toLowerCase().includes(q);
-      const matchesCat = activeCategory === "All" || t.category === activeCategory;
+      const matchesCat = activeCategory === "すべて" || t.category === activeCategory;
       return matchesSearch && matchesCat;
     });
   }, [search, activeCategory]);
@@ -70,42 +109,93 @@ export default function HomePage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
       {/* Hero */}
-      <div className="text-center mb-12">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-4 tracking-tight">
-          AI{" "}
-          <span style={{ color: "var(--accent)" }}>Glossary</span>
+      <div className="text-center mb-14">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold mb-6" style={{ background: "#F9731620", color: "var(--accent)", border: "1px solid #F9731640" }}>
+          🚀 Claude / AI用語集
+        </div>
+        <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight leading-tight">
+          AI用語を
+          <br />
+          <span style={{ color: "var(--accent)" }}>マスターしよう</span>
         </h1>
-        <p className="text-lg max-w-xl mx-auto" style={{ color: "var(--muted)" }}>
-          {glossaryTerms.length}+ essential terms explained clearly — from transformers to RLHF.
+        <p className="text-base sm:text-lg max-w-xl mx-auto mb-8" style={{ color: "var(--muted)" }}>
+          Claude・AI関連の必須用語{glossary.length}語を収録。<br className="hidden sm:block" />
+          用語をクリックして詳細を確認、クイズで理解を深めよう。
         </p>
         <Link
           href="/quiz"
-          className="inline-block mt-6 px-6 py-3 rounded-xl font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold text-white text-base transition-all hover:opacity-90 hover:scale-105 shadow-lg"
           style={{ background: "var(--accent)" }}
         >
-          Test your knowledge →
+          <span>🎯</span> クイズに挑戦する
         </Link>
       </div>
 
-      {/* Search & filter */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
-        <input
-          type="text"
-          placeholder="Search terms..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 rounded-lg px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-orange-500/50 transition"
-          style={{ background: "var(--card)", border: "1px solid var(--border)", color: "var(--foreground)" }}
-        />
-        <div className="flex gap-2 flex-wrap">
-          {["All", ...categories].map((cat) => (
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+        {CATEGORIES.map((cat) => {
+          const count = glossary.filter((t) => t.category === cat).length;
+          const color = CATEGORY_COLORS[cat];
+          return (
             <button
               key={cat}
-              onClick={() => setActiveCategory(cat)}
-              className="px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
+              onClick={() => setActiveCategory(activeCategory === cat ? "すべて" : cat)}
+              className="rounded-xl p-3 text-left transition-all hover:scale-[1.02]"
+              style={{
+                background: activeCategory === cat ? `${color}20` : "var(--card)",
+                border: `1px solid ${activeCategory === cat ? color : "var(--border)"}`,
+              }}
+            >
+              <div className="text-xl font-black mb-0.5" style={{ color }}>
+                {count}
+              </div>
+              <div className="text-xs font-medium" style={{ color: activeCategory === cat ? color : "var(--muted)" }}>
+                {cat}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Search & filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <div className="relative flex-1">
+          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-base" style={{ color: "var(--muted)" }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            placeholder="用語を検索..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl pl-10 pr-4 py-3 text-sm outline-none focus:ring-2 transition"
+            style={{
+              background: "var(--card)",
+              border: "1px solid var(--border)",
+              color: "var(--foreground)",
+            }}
+          />
+        </div>
+        <div className="flex gap-2 flex-wrap items-center">
+          <button
+            onClick={() => setActiveCategory("すべて")}
+            className="px-4 py-2 rounded-xl text-xs font-semibold transition-all"
+            style={
+              activeCategory === "すべて"
+                ? { background: "var(--accent)", color: "#fff" }
+                : { background: "var(--card)", color: "var(--muted)", border: "1px solid var(--border)" }
+            }
+          >
+            すべて ({glossary.length})
+          </button>
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(activeCategory === cat ? "すべて" : cat)}
+              className="px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap"
               style={
                 activeCategory === cat
-                  ? { background: "var(--accent)", color: "#fff" }
+                  ? { background: CATEGORY_COLORS[cat], color: "#fff" }
                   : { background: "var(--card)", color: "var(--muted)", border: "1px solid var(--border)" }
               }
             >
@@ -115,15 +205,15 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <p className="text-xs mb-5" style={{ color: "var(--muted)" }}>
-        Showing {filtered.length} of {glossaryTerms.length} terms
+      <p className="text-xs mb-6" style={{ color: "var(--muted)" }}>
+        {filtered.length}件表示 / 全{glossary.length}語
       </p>
 
       {/* Grid */}
       {filtered.length === 0 ? (
-        <div className="text-center py-20" style={{ color: "var(--muted)" }}>
-          No terms found for &ldquo;{search}&rdquo;
+        <div className="text-center py-20 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+          <div className="text-4xl mb-3">🔎</div>
+          <p style={{ color: "var(--muted)" }}>「{search}」に一致する用語が見つかりませんでした</p>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 gap-4">
