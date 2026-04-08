@@ -5,10 +5,12 @@ import Link from "next/link";
 import { glossary, CATEGORIES, type Term, type Category } from "@/lib/glossary";
 
 const CATEGORY_COLORS: Record<Category, string> = {
-  "Claude製品": "#8b5cf6",
-  "基本概念": "#3b82f6",
-  "テクニック": "#10b981",
-  "開発者向け": "#F97316",
+  "AI基礎": "#3b82f6",
+  "Claude・ChatGPT": "#8b5cf6",
+  "プログラミング": "#F97316",
+  "Web・インターネット": "#10b981",
+  "データ・セキュリティ": "#ef4444",
+  "ビジネス・DX": "#f59e0b",
 };
 
 function TermCard({ term }: { term: Term }) {
@@ -132,7 +134,7 @@ export default function HomePage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-10">
         {CATEGORIES.map((cat) => {
           const count = glossary.filter((t) => t.category === cat).length;
           const color = CATEGORY_COLORS[cat];
