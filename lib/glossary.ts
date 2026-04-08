@@ -53,6 +53,7 @@ import { batch2 } from "./batch2";
 import { batch3 } from "./batch3";
 import { batch4 } from "./batch4";
 import { batch5 } from "./batch5";
+import { batch6 } from "./batch6";
 
 // 全用語を統合（重複IDを除外）
 function mergeTerms(...arrays: Term[][]): Term[] {
@@ -69,7 +70,7 @@ function mergeTerms(...arrays: Term[][]): Term[] {
   return result;
 }
 
-export const glossary: Term[] = mergeTerms(originalTerms, batch1, batch2, batch3, batch4, batch5);
+export const glossary: Term[] = mergeTerms(originalTerms, batch1, batch2, batch3, batch4, batch5, batch6);
 
 export function getTermsByCategory(category: Category): Term[] {
   return glossary.filter((term) => term.category === category);
