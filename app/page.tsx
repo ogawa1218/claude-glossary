@@ -3,6 +3,9 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { glossary, CATEGORIES, type Term, type Category } from "@/lib/glossary";
+import { useAuth } from "@/lib/AuthContext";
+
+const FREE_LIMIT = 10;
 
 const CATEGORY_COLORS: Record<Category, string> = {
   "AI基礎": "#3b82f6",
@@ -91,6 +94,7 @@ function TermCard({ term }: { term: Term }) {
 }
 
 export default function HomePage() {
+  const { authed, loading } = useAuth();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<Category | "すべて">("すべて");
 
@@ -107,6 +111,9 @@ export default function HomePage() {
       return matchesSearch && matchesCat;
     });
   }, [search, activeCategory]);
+
+  const displayTerms = authed ? filtered : filtered.slice(0, FREE_LIMIT);
+  const isGated = !authed && filtered.length > FREE_LIMIT;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-12">
@@ -208,7 +215,7 @@ export default function HomePage() {
       </div>
 
       <p className="text-xs mb-6" style={{ color: "var(--muted)" }}>
-        {filtered.length}件表示 / 全{glossary.length}語
+        {authed ? `${filtered.length}件表示` : `${displayTerms.length}件表示（無料版）`} / 全{glossary.length}語
       </p>
 
       {/* Grid */}
@@ -218,11 +225,40 @@ export default function HomePage() {
           <p style={{ color: "var(--muted)" }}>「{search}」に一致する用語が見つかりませんでした</p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4">
-          {filtered.map((term) => (
-            <TermCard key={term.id} term={term} />
-          ))}
-        </div>
+        <>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {displayTerms.map((term) => (
+              <TermCard key={term.id} term={term} />
+            ))}
+          </div>
+
+          {/* Gate banner for non-authenticated users */}
+          {isGated && (
+            <div className="relative mt-8">
+              <div className="absolute inset-x-0 -top-32 h-32 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none" />
+              <div
+                className="rounded-2xl p-8 text-center fade-in"
+                style={{ background: "var(--card)", border: "2px solid var(--accent)" }}
+              >
+                <div className="text-5xl mb-4">🔒</div>
+                <h2 className="text-2xl font-black mb-2">
+                  残り <span style={{ color: "var(--accent)" }}>{filtered.length - FREE_LIMIT}語</span> はプレミアム限定
+                </h2>
+                <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
+                  Brain購入者はパスワードを入力して全500語にアクセスできます。<br />
+                  クイズ成績記録・PDF用語カードのダウンロードも利用可能！
+                </p>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl font-bold text-white text-base transition-all hover:opacity-90 hover:scale-105 shadow-lg"
+                  style={{ background: "var(--accent)" }}
+                >
+                  🔐 ログインして全用語を見る
+                </Link>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

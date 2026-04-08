@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { glossary, type Term } from "@/lib/glossary";
+import { useAuth } from "@/lib/AuthContext";
+import { saveQuizResult, getQuizHistory, getBestScore, getAverageScore, type QuizResult } from "@/lib/quizHistory";
 
 interface Question {
   term: Term;
@@ -45,6 +47,7 @@ function getRank(score: number): { label: string; emoji: string; message: string
 }
 
 export default function QuizPage() {
+  const { authed } = useAuth();
   const [phase, setPhase] = useState<Phase>("idle");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [current, setCurrent] = useState(0);
@@ -52,6 +55,17 @@ export default function QuizPage() {
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [flashClass, setFlashClass] = useState("");
+  const [history, setHistory] = useState<QuizResult[]>([]);
+  const [bestScore, setBestScore] = useState(0);
+  const [avgScore, setAvgScore] = useState(0);
+
+  useEffect(() => {
+    if (authed) {
+      setHistory(getQuizHistory());
+      setBestScore(getBestScore());
+      setAvgScore(getAverageScore());
+    }
+  }, [authed, phase]);
 
   const startQuiz = useCallback(() => {
     setQuestions(buildQuestions(TOTAL));
@@ -78,6 +92,11 @@ export default function QuizPage() {
 
   const handleNext = () => {
     if (current + 1 >= TOTAL) {
+      // Save result if authenticated
+      if (authed) {
+        const finalScore = score + (selected === questions[current].correctIndex ? 0 : 0);
+        saveQuizResult(score, TOTAL);
+      }
       setPhase("done");
     } else {
       setCurrent((c) => c + 1);
@@ -167,6 +186,32 @@ export default function QuizPage() {
             {rank.emoji} {rank.label}
           </div>
         </div>
+
+        {/* Stats for authenticated users */}
+        {authed && history.length > 0 && (
+          <div
+            className="rounded-2xl p-5 mb-8 text-left max-w-sm mx-auto"
+            style={{ background: "var(--card)", border: "1px solid var(--border)" }}
+          >
+            <h3 className="font-bold text-sm mb-3 text-center" style={{ color: "var(--accent)" }}>
+              あなたの成績
+            </h3>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-2xl font-black" style={{ color: "var(--accent)" }}>{bestScore}</div>
+                <div className="text-xs" style={{ color: "var(--muted)" }}>ベスト</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black">{avgScore}</div>
+                <div className="text-xs" style={{ color: "var(--muted)" }}>平均</div>
+              </div>
+              <div>
+                <div className="text-2xl font-black">{history.length}</div>
+                <div className="text-xs" style={{ color: "var(--muted)" }}>挑戦回数</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-4 justify-center flex-wrap">
           <button
