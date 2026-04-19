@@ -15,6 +15,7 @@ const categoryColorMap: Record<string, { border: string; bg: string; text: strin
   "prompt-tech": { border: "#34d399", bg: "rgba(52,211,153,0.12)", text: "#34d399" },
   "pricing": { border: "#fbbf24", bg: "rgba(251,191,36,0.12)", text: "#fbbf24" },
   "automation": { border: "#f472b6", bg: "rgba(244,114,182,0.12)", text: "#f472b6" },
+  "database": { border: "#34d399", bg: "rgba(16,185,129,0.12)", text: "#10b981" },
 };
 
 export default function CategoryFilter({ selected, onChange, counts }: CategoryFilterProps) {

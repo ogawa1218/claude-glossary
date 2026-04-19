@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import PasswordGate from "@/components/PasswordGate";
 
 export const metadata: Metadata = {
   title: "MASH | Claude & IT用語辞典",
@@ -21,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="min-h-screen" style={{ backgroundColor: "#1e1f22" }}>
-        {children}
+        <PasswordGate>{children}</PasswordGate>
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { terms, getTermBySlug, categories } from "@/data/terms";
+import { allTerms as terms, getTermBySlug, categories } from "@/data/terms";
 import Header from "@/components/Header";
 import TermDetail from "@/components/TermDetail";
 import type { Metadata } from "next";

@@ -15,6 +15,7 @@ const categoryColorMap: Record<string, { border: string; bg: string; text: strin
   "prompt-tech": { border: "#34d399", bg: "rgba(52,211,153,0.06)", text: "#34d399", badge: "rgba(52,211,153,0.15)" },
   "pricing": { border: "#fbbf24", bg: "rgba(251,191,36,0.06)", text: "#fbbf24", badge: "rgba(251,191,36,0.15)" },
   "automation": { border: "#f472b6", bg: "rgba(244,114,182,0.06)", text: "#f472b6", badge: "rgba(244,114,182,0.15)" },
+  "database": { border: "#34d399", bg: "rgba(16,185,129,0.06)", text: "#10b981", badge: "rgba(16,185,129,0.15)" },
 };
 
 const difficultyConfig: Record<Difficulty, { label: string; color: string; bg: string }> = {

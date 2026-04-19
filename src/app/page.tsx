@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
 import TermCard from "@/components/TermCard";
-import { terms, categories, searchTerms, Category, Difficulty } from "@/data/terms";
+import { allTerms as terms, categories, searchTerms, Category, Difficulty } from "@/data/terms";
 
 const categoryColorMap: Record<string, { border: string; text: string }> = {
   "ai-basics": { border: "#38bdf8", text: "#38bdf8" },
