@@ -1,44 +1,153 @@
 "use client";
 
 import Link from "next/link";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { AuthProvider, useAuth } from "@/lib/AuthContext";
 
+/* ---------- Theme toggle (useSyncExternalStore pattern) ---------- */
+function subscribeTheme(callback: () => void) {
+  const observer = new MutationObserver(callback);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+function getThemeSnapshot(): "light" | "dark" {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+function getServerThemeSnapshot(): "light" | "dark" {
+  return "light";
+}
+
+function useTheme() {
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const toggle = useCallback(() => {
+    const next = document.documentElement.classList.contains("dark") ? "light" : "dark";
+    document.documentElement.classList.toggle("dark", next === "dark");
+    try {
+      localStorage.setItem("glossary_theme", next);
+    } catch {}
+  }, []);
+  return { theme, toggle };
+}
+
+function ThemeButton() {
+  const { theme, toggle } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <button
+      onClick={toggle}
+      aria-label={isDark ? "ライトモードに切り替え" : "ダークモードに切り替え"}
+      className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:scale-110"
+      style={{
+        background: "var(--surface-2)",
+        border: "1px solid var(--hairline)",
+        color: "var(--text-soft)",
+      }}
+      suppressHydrationWarning
+    >
+      <span suppressHydrationWarning>
+        {isDark ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        )}
+      </span>
+    </button>
+  );
+}
+
+/* ---------- Logo mark ---------- */
+function LogoMark() {
+  return (
+    <span
+      aria-hidden
+      className="inline-flex items-center justify-center w-9 h-9 rounded-lg flex-shrink-0 font-serif font-bold text-lg"
+      style={{
+        background: "var(--accent)",
+        color: "#fff",
+        boxShadow: "var(--shadow-accent)",
+        letterSpacing: "-0.05em",
+      }}
+    >
+      IT
+    </span>
+  );
+}
+
+/* ---------- Header ---------- */
 function Header() {
   const { authed, logout } = useAuth();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b" style={{ borderColor: "var(--border)", background: "rgba(26,26,46,0.9)", backdropFilter: "blur(12px)" }}>
-      <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-          <span className="text-2xl">🤖</span>
-          <span>
-            AI用語集 <span style={{ color: "var(--accent)" }}>by MASH</span>
-          </span>
+    <header
+      className="sticky top-0 z-50 transition-all duration-300"
+      style={{
+        borderBottom: `1px solid ${scrolled ? "var(--hairline)" : "transparent"}`,
+        background: scrolled ? "var(--surface-elevated)" : "transparent",
+        backdropFilter: scrolled ? "blur(14px) saturate(120%)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(14px) saturate(120%)" : "none",
+      }}
+    >
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
+        <Link href="/" className="flex items-center gap-3 group">
+          <LogoMark />
+          <div className="leading-tight">
+            <div className="font-serif text-lg font-semibold tracking-tight" style={{ color: "var(--text)" }}>
+              IT用語辞典
+            </div>
+            <div className="text-[10px] tracking-[0.18em] uppercase font-medium" style={{ color: "var(--muted)" }}>
+              by MASH · Claude Edition
+            </div>
+          </div>
         </Link>
-        <nav className="flex items-center gap-3 text-sm font-medium">
-          <Link href="/" className="hover:opacity-80 transition-opacity hidden sm:block" style={{ color: "var(--foreground)" }}>
-            用語集
+
+        <nav className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            className="hidden sm:block px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
+            style={{ color: "var(--text-soft)" }}
+          >
+            辞典
           </Link>
           <Link
             href="/quiz"
-            className="px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90 hover:scale-105"
-            style={{ background: "var(--accent)", color: "#fff" }}
+            className="px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-[1.03] btn-accent"
           >
-            クイズ
+            <span className="mr-1">◉</span>クイズ
           </Link>
           {authed ? (
             <>
               <Link
                 href="/download"
-                className="px-3 py-2 rounded-lg font-semibold transition-all hover:opacity-90 hidden sm:block"
-                style={{ background: "var(--card)", color: "var(--foreground)", border: "1px solid var(--border)" }}
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+                style={{
+                  background: "var(--surface)",
+                  color: "var(--text)",
+                  border: "1px solid var(--hairline-strong)",
+                }}
               >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
                 PDF
               </Link>
               <button
                 onClick={logout}
-                className="px-3 py-2 rounded-lg text-xs transition-all hover:opacity-80"
+                className="px-2 py-2 rounded-lg text-xs transition-all hover:opacity-80"
                 style={{ color: "var(--muted)" }}
+                aria-label="ログアウト"
               >
                 ログアウト
               </button>
@@ -46,15 +155,88 @@ function Header() {
           ) : (
             <Link
               href="/login"
-              className="px-4 py-2 rounded-lg font-semibold transition-all hover:opacity-90 hover:scale-105"
-              style={{ background: "var(--card)", color: "var(--accent)", border: "1px solid var(--accent)" }}
+              className="px-3 py-2 rounded-xl text-sm font-semibold transition-all hover:scale-[1.03] inline-flex items-center gap-1.5"
+              style={{
+                background: "var(--surface)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
             >
-              🔐 ログイン
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span className="hidden sm:inline">ログイン</span>
             </Link>
           )}
+          <ThemeButton />
         </nav>
       </div>
     </header>
+  );
+}
+
+/* ---------- Footer ---------- */
+function Footer() {
+  return (
+    <footer className="mt-20" style={{ borderTop: "1px solid var(--hairline)" }}>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="grid sm:grid-cols-3 gap-8 mb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <LogoMark />
+              <div className="font-serif text-base font-semibold">IT用語辞典</div>
+            </div>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--muted)" }}>
+              Claude／AI時代を生き抜くための必須IT用語を、<br />
+              中学生でもわかる言葉で。
+            </p>
+          </div>
+          <div>
+            <div className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: "var(--muted)" }}>
+              コンテンツ
+            </div>
+            <ul className="space-y-2 text-sm" style={{ color: "var(--text-soft)" }}>
+              <li><Link href="/" className="hover:text-[var(--accent)] transition-colors">用語辞典</Link></li>
+              <li><Link href="/quiz" className="hover:text-[var(--accent)] transition-colors">4択クイズ</Link></li>
+              <li><Link href="/download" className="hover:text-[var(--accent)] transition-colors">PDF／CSVダウンロード</Link></li>
+            </ul>
+          </div>
+          <div>
+            <div className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: "var(--muted)" }}>
+              運営者
+            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: "var(--text)" }}>MASH</p>
+            <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+              海外11カ国253店舗FC本部のビジネスデータアナリスト
+            </p>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://twitter.com/mash_cowork"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm hover:text-[var(--accent)] transition-colors inline-flex items-center gap-1.5"
+                style={{ color: "var(--text-soft)" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                @mash_cowork
+              </a>
+            </div>
+          </div>
+        </div>
+        <div className="hairline-divider mb-5" />
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs" style={{ color: "var(--muted)" }}>
+          <p>© {new Date().getFullYear()} MASH. All rights reserved.</p>
+          <p className="flex items-center gap-1.5">
+            Crafted with
+            <span style={{ color: "var(--accent)" }}>●</span>
+            Claude Code
+          </p>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -63,27 +245,7 @@ export function LayoutShell({ children }: { children: React.ReactNode }) {
     <AuthProvider>
       <Header />
       <main className="flex-1">{children}</main>
-      <footer className="border-t py-8 text-center text-sm" style={{ borderColor: "var(--border)", color: "var(--muted)" }}>
-        <div className="max-w-5xl mx-auto px-4">
-          <p className="font-semibold mb-1" style={{ color: "var(--foreground)" }}>MASH</p>
-          <p className="mb-3">
-            <a href="https://twitter.com/mash_cowork" target="_blank" rel="noopener noreferrer" className="hover:text-orange-400 transition-colors">
-              @mash_cowork
-            </a>
-          </p>
-          <a
-            href="https://github.com/ogawa1218/claude-glossary"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
-            </svg>
-            GitHub
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </AuthProvider>
   );
 }
