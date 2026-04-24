@@ -490,7 +490,7 @@ export default function HomePage() {
                 {/* Benefits grid */}
                 <div className="mt-9 grid sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-left">
                   {[
-                    { icon: "📚", t: "全500語", d: "毎月新用語追加" },
+                    { icon: "📚", t: `全${glossary.length}語`, d: "毎月新用語追加" },
                     { icon: "📄", t: "PDF／CSV", d: "印刷カードDL可" },
                     { icon: "🏆", t: "成績記録", d: "ベスト／平均を追跡" },
                   ].map((b) => (

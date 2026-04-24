@@ -54,6 +54,12 @@ import { batch3 } from "./batch3";
 import { batch4 } from "./batch4";
 import { batch5 } from "./batch5";
 import { batch6 } from "./batch6";
+import { batch7 } from "./batch7";
+import { batch8 } from "./batch8";
+import { batch9 } from "./batch9";
+import { batch10 } from "./batch10";
+import { batch11 } from "./batch11";
+import { batch12 } from "./batch12";
 
 // 全用語を統合（重複IDを除外）
 function mergeTerms(...arrays: Term[][]): Term[] {
@@ -70,7 +76,13 @@ function mergeTerms(...arrays: Term[][]): Term[] {
   return result;
 }
 
-export const glossary: Term[] = mergeTerms(originalTerms, batch1, batch2, batch3, batch4, batch5, batch6);
+// 新バッチを先に入れることで、同一ID（kubernetes、vercel など）では実務寄りの
+// 最新解説が優先される。未衝突の500語以上の旧バッチはフォールバックとして残る。
+export const glossary: Term[] = mergeTerms(
+  batch7, batch8, batch9, batch10, batch11, batch12,
+  originalTerms,
+  batch1, batch2, batch3, batch4, batch5, batch6,
+);
 
 export function getTermsByCategory(category: Category): Term[] {
   return glossary.filter((term) => term.category === category);

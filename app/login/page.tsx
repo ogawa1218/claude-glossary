@@ -127,7 +127,7 @@ export default function LoginPage() {
         </p>
         <ul className="space-y-2.5">
           {[
-            "IT用語 500語の完全解説",
+            "IT用語 1000語の完全解説（Supabase／Claude Code／MCP網羅）",
             "中学生でも理解できる丁寧な説明",
             "4択クイズで理解度を即時チェック",
             "クイズ成績記録・ベスト／平均スコア追跡",
