@@ -54,4 +54,4 @@ Vercel にGitHub連携でデプロイされています。
 
 ---
 
-**MASH** | [@mash_cowork](https://twitter.com/mash_cowork)
+**MASH** | [@mashknowledgeengineer](https://substack.com/@mashknowledgeengineer)
